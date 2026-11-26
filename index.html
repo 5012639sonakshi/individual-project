@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cost-Aware Active Learning for Fraud Detection</title>
+<style>
+:root{--bg:#F5F8FC;--card:#fff;--ink:#14284B;--mut:#5B6B85;--blue:#1F4E8C;--teal:#12958F;--orange:#D9680F;--line:#DCE4EF;--grey:#8A97A8;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1330;--card:#171E45;--ink:#EEF1FF;--mut:#A7B0DA;--blue:#7FB0FF;--teal:#2EE6C5;--orange:#FFA24D;--line:#2B3469;--grey:#8590B8;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0E1330;--card:#171E45;--ink:#EEF1FF;--mut:#A7B0DA;--blue:#7FB0FF;--teal:#2EE6C5;--orange:#FFA24D;--line:#2B3469;--grey:#8590B8;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px 60px}
+header{padding:56px 0 28px}
+.tag{display:inline-block;font-size:13px;font-weight:700;letter-spacing:1px;color:var(--teal);text-transform:uppercase}
+h1{font-size:clamp(32px,6vw,54px);line-height:1.08;margin:10px 0 14px;letter-spacing:-1px}
+h1 span{color:var(--orange)}
+p.lead{font-size:19px;color:var(--mut);max-width:680px;margin:0 0 24px}
+button{font:inherit;font-weight:700;font-size:18px;background:var(--blue);color:#fff;border:0;border-radius:14px;padding:15px 30px;cursor:pointer}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) button{color:#0E1330}}
+button:disabled{opacity:.6;cursor:wait}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;margin-top:22px}
+h2{font-size:24px;margin:0 0 14px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.step{text-align:center;padding:6px}
+.n{width:46px;height:46px;border-radius:50%;background:var(--blue);color:#fff;font-weight:800;line-height:46px;margin:0 auto 8px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .n{color:#0E1330}}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:22px}
+.stat{border-radius:20px;padding:22px;color:#fff}
+.stat b{display:block;font-size:44px;line-height:1.05}
+.stat small{font-size:16px;font-weight:600}
+.s1{background:#12958F}.s2{background:#1F4E8C}.s3{background:#C2570C}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:15px}
+th,td{padding:10px 8px;text-align:right;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+.leg{display:flex;gap:18px;flex-wrap:wrap;font-size:15px;color:var(--mut);margin-top:8px}
+.leg i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.note{color:var(--mut);font-size:15px}
+#prog{height:8px;border-radius:4px;background:var(--line);margin-top:16px;overflow:hidden;display:none}
+#prog div{height:100%;width:0;background:var(--teal);transition:width .2s}
+#out{display:none}
+svg text{fill:var(--mut);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<span class="tag">Python Programming | AI &amp; Machine Learning</span>
+<h1>Catch fraud. <span>Label less.</span></h1>
+<p class="lead">Banks can’t afford to check every transaction by hand. This demo shows how a computer can pick only the most useful, cheapest transactions to check and still catch fraud well.</p>
+<button id="run">Run demo</button>
+<div id="prog"><div></div></div>
+</header>
+
+<div id="out">
+<div class="stats" id="stats"></div>
+<div class="card"><h2>Detection quality as money is spent</h2>
+<div id="chart"></div>
+<div class="leg"><span><i style="background:var(--grey)"></i>Random</span><span><i style="background:var(--blue)"></i>Most confusing</span><span><i style="background:var(--teal)"></i>Confusing per cost</span></div></div>
+<div class="card"><h2>Final results at the budget</h2><div class="scroll"><table id="tbl"></table></div>
+<p class="note" id="foot"></p></div>
+</div>
+
+<div class="card"><h2>How it works</h2>
+<div class="steps">
+<div class="step"><div class="n">1</div>Learn from a few labeled examples</div>
+<div class="step"><div class="n">2</div>Spot the cases it is confused about</div>
+<div class="step"><div class="n">3</div>Pick the cheap, useful ones</div>
+<div class="step"><div class="n">4</div>Ask the investigator for labels</div>
+<div class="step"><div class="n">5</div>Learn again and repeat</div>
+</div>
+<p class="note">The demo simulates 12,000 fake transactions (about 5% fraud, each with a checking cost of 1 to 6 units), trains a Logistic Regression model, and compares three ways of choosing what to check, with a budget of 1,200 units, averaged over 5 runs.</p></div>
+<p class="note">Results come from simulated data and are not proof of performance on real bank data. Project by Sonakshi (25BTRCM002), guided by Dr. B. Narmada, JAIN (Deemed-to-be University).</p>
+</div>
+
+<script>
+function rng(s){return function(){s|=0;s=s+0x6D2B79F5|0;var t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(r){return Math.sqrt(-2*Math.log(r()+1e-12))*Math.cos(2*Math.PI*r())}
+var D=8,SH=[1.6,1.2,-1.4,1,.8,-.9,0,0];
+function sig(z){z=Math.max(-30,Math.min(30,z));return 1/(1+Math.exp(-z))}
+function makeData(seed){var r=rng(seed),n=12000,X=[],y=[],c=[];
+for(var i=0;i<n;i++){var f=r()<.05?1:0,row=[];for(var j=0;j<D;j++){var v=gauss(r);if(f)v+=SH[j]+gauss(r)*.3;row.push(v)}X.push(row);y.push(f);c.push(Math.round(Math.min(6,Math.max(1,1+1.5*Math.abs(row[7])))*10)/10)}
+for(var j=0;j<D;j++){var m=0,s=0;for(i=0;i<n;i++)m+=X[i][j];m/=n;for(i=0;i<n;i++)s+=(X[i][j]-m)*(X[i][j]-m);s=Math.sqrt(s/n);for(i=0;i<n;i++)X[i][j]=(X[i][j]-m)/s}
+return{X:X,y:y,c:c}}
+function train(idx,X,y,w,b,it){w=w.slice();var n=idx.length,pos=0;idx.forEach(function(i){pos+=y[i]});var cw1=pos?(n-pos)/pos:1,mean=(pos*cw1+(n-pos))/n;cw1/=mean;var cw0=1/mean;
+for(var k=0;k<it;k++){var gw=new Array(D).fill(0),gb=0;for(var t=0;t<n;t++){var i=idx[t],z=b;for(var j=0;j<D;j++)z+=w[j]*X[i][j];var g=(sig(z)-y[i])*(y[i]?cw1:cw0);for(j=0;j<D;j++)gw[j]+=g*X[i][j];gb+=g}
+for(j=0;j<D;j++)w[j]-=.3*(gw[j]/n+.001*w[j]);b-=.3*gb/n}
+return{w:w,b:b}}
+function evalm(m,X,y,lo,hi){var tp=0,fp=0,fn=0,tn=0;for(var i=lo;i<hi;i++){var z=m.b;for(var j=0;j<D;j++)z+=m.w[j]*X[i][j];var p=z>=0?1:0;if(p&&y[i])tp++;else if(p)fp++;else if(y[i])fn++;else tn++}
+var pr=tp/Math.max(tp+fp,1),rc=tp/Math.max(tp+fn,1);return{acc:(tp+tn)/(hi-lo),prec:pr,rec:rc,f1:2*pr*rc/Math.max(pr+rc,1e-9),fpr:fp/Math.max(fp+tn,1)}}
+function runOne(strat,seed,d,budget,batch){var r=rng(seed*7+strat.length),X=d.X,y=d.y,c=d.c,N=X.length,lab=[],inL={};
+while(lab.length<40){var i=3000+Math.floor(r()*(N-3000));if(!inL[i]){inL[i]=1;lab.push(i)}}
+if(!lab.some(function(i){return y[i]})){for(i=3000;i<N;i++)if(y[i]){inL[i]=1;lab.push(i);break}}
+var spent=0;lab.forEach(function(i){spent+=c[i]});var m=train(lab,X,y,new Array(D).fill(0),0,150),hist=[{cost:spent,n:lab.length,m:evalm(m,X,y,0,3000)}];
+while(spent<budget){var sc=[];for(i=3000;i<N;i++){if(inL[i])continue;var s;if(strat==="Random")s=r();else{var z=m.b;for(var j=0;j<D;j++)z+=m.w[j]*X[i][j];var u=1-Math.abs(2*sig(z)-1);s=strat==="Cost-aware"?u/c[i]:u}sc.push([s,i])}
+sc.sort(function(a,b){return b[0]-a[0]});var bc=0,k=0;for(;k<sc.length;k++){var ii=sc[k][1];if(bc+c[ii]>batch)break;bc+=c[ii];inL[ii]=1;lab.push(ii)}
+if(!k)break;spent+=bc;m=train(lab,X,y,m.w,m.b,150);hist.push({cost:spent,n:lab.length,m:evalm(m,X,y,0,3000)})}
+return hist}
+function avg(H,key){var L=Math.min.apply(null,H.map(function(h){return h.length})),o=[];for(var i=0;i<L;i++){var q={cost:0,n:0,f1:0,acc:0,prec:0,rec:0,fpr:0};H.forEach(function(h){q.cost+=h[i].cost;q.n+=h[i].n;["f1","acc","prec","rec","fpr"].forEach(function(k){q[k]+=h[i].m[k]})});for(var k in q)q[k]/=H.length;o.push(q)}return o}
+function pct(v){return(v*100).toFixed(1)+"%"}
+function chart(S,names,cols){var W=720,H=320,L=48,B=36,T=12,R=12,mx=1250,pw=W-L-R,ph=H-B-T,s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="F1-score versus labeling cost for three strategies">';
+for(var g=0;g<=4;g++){var v=g*.25,yy=T+ph*(1-v);s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'" stroke="var(--line)"/><text x="'+(L-8)+'" y="'+(yy+4)+'" text-anchor="end">'+Math.round(v*100)+'%</text>'}
+for(g=0;g<=5;g++){var x=L+pw*g/5;s+='<text x="'+x+'" y="'+(H-12)+'" text-anchor="middle">'+Math.round(mx*g/5)+'</text>'}
+s+='<text x="'+(L+pw/2)+'" y="'+(H-0)+'" text-anchor="middle">labeling cost spent (units)</text>';
+names.forEach(function(n,i){var d="";S[n].forEach(function(p,k){var x=L+pw*Math.min(p.cost,mx)/mx,yy=T+ph*(1-p.f1);d+=(k?"L":"M")+x.toFixed(1)+" "+yy.toFixed(1)});s+='<path d="'+d+'" fill="none" stroke="'+cols[i]+'" stroke-width="3" stroke-linejoin="round"/>'});
+return s+"</svg>"}
+document.getElementById("run").onclick=function(){var btn=this,pg=document.getElementById("prog"),bar=pg.firstElementChild;btn.disabled=true;btn.textContent="Running…";pg.style.display="block";bar.style.width="3%";
+var names=["Random","Uncertainty","Cost-aware"],labels={"Random":"Random picking","Uncertainty":"Most confusing","Cost-aware":"Confusing per cost"},seeds=[1,2,3,4,5],jobs=[];
+seeds.forEach(function(sd){names.forEach(function(n){jobs.push([n,sd])})});var res={Random:[],Uncertainty:[],"Cost-aware":[]},data={},fullCost=0,fullM=null,k=0;
+function step(){if(k<jobs.length){var j=jobs[k];if(!data[j[1]])data[j[1]]=makeData(j[1]);res[j[0]].push(runOne(j[0],j[1],data[j[1]],1200,60));k++;bar.style.width=(5+85*k/jobs.length)+"%";setTimeout(step,5)}else fin()}
+function fin(){var d=data[1],idx=[];for(var i=3000;i<12000;i++){idx.push(i);fullCost+=d.c[i]}fullM=evalm(train(idx,d.X,d.y,new Array(D).fill(0),0,150),d.X,d.y,0,3000);
+var S={};names.forEach(function(n){S[n]=avg(res[n])});var fin={};names.forEach(function(n){fin[n]=S[n][S[n].length-1]});
+var best=fin.Uncertainty.fpr<fin["Cost-aware"].fpr?fin.Uncertainty:fin["Cost-aware"],saved=1-fin["Cost-aware"].cost/fullCost,more=fin["Cost-aware"].n/fin.Uncertainty.n-1;
+document.getElementById("stats").innerHTML='<div class="stat s1"><b>'+Math.round(saved*100)+'%</b><small>less labeling cost than checking every transaction</small></div><div class="stat s2"><b>'+pct(fin.Random.fpr)+' → '+pct(best.fpr)+'</b><small>false alarms, random vs smart picking</small></div><div class="stat s3"><b>'+(more>=0?"+":"")+Math.round(more*100)+'%</b><small>more labeled examples for the same money (cost-aware vs most confusing)</small></div>';
+document.getElementById("chart").innerHTML=chart(S,names,["var(--grey)","var(--blue)","var(--teal)"]);
+var h="<tr><th>Method</th><th>Labels</th><th>Cost</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>False alarms</th></tr>";
+names.forEach(function(n){var f=fin[n];h+="<tr><td>"+labels[n]+"</td><td>"+f.n.toFixed(0)+"</td><td>"+f.cost.toFixed(0)+"</td><td>"+pct(f.acc)+"</td><td>"+pct(f.prec)+"</td><td>"+pct(f.rec)+"</td><td>"+pct(f.f1)+"</td><td>"+pct(f.fpr)+"</td></tr>"});
+h+="<tr><td>Every record labeled</td><td>9000</td><td>"+fullCost.toFixed(0)+"</td><td>"+pct(fullM.acc)+"</td><td>"+pct(fullM.prec)+"</td><td>"+pct(fullM.rec)+"</td><td>"+pct(fullM.f1)+"</td><td>"+pct(fullM.fpr)+"</td></tr>";
+document.getElementById("tbl").innerHTML=h;
+document.getElementById("foot").textContent="Averages over 5 runs on a 3,000-record test set. Numbers vary slightly from run to run and from the report because this demo uses its own random data.";
+document.getElementById("out").style.display="block";bar.style.width="100%";setTimeout(function(){pg.style.display="none"},400);btn.disabled=false;btn.textContent="Run again";document.getElementById("out").scrollIntoView({behavior:"smooth"})}
+setTimeout(step,20)};
+</script>
+</body>
+</html>
